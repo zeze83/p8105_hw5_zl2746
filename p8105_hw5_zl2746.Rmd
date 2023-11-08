@@ -27,3 +27,12 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+```{r}
+homicide_df = read.csv("data/homicide-data.csv")
+```
+
+* Describe the raw data.
+  
+  There are `r nrow(homicide_df)` observations with `r ncol(homicide_df)` variables in this data set. The variables are `r colnames(homicide_df)`.
+  
+* Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
