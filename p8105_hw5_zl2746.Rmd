@@ -7,6 +7,7 @@ output: github_document
 
 ```{r, include = FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)
+library(rvest)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -27,6 +28,8 @@ scale_colour_discrete = scale_colour_viridis_d
 scale_fill_discrete = scale_fill_viridis_d
 ```
 
+## Problem 1
+
 ```{r}
 homicide_df = read.csv("data/homicide-data.csv")
 ```
@@ -35,4 +38,31 @@ homicide_df = read.csv("data/homicide-data.csv")
   
   There are `r nrow(homicide_df)` observations with `r ncol(homicide_df)` variables in this data set. The variables are `r colnames(homicide_df)`.
   
-* Create a city_state variable (e.g. “Baltimore, MD”) and then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+* Create a city_state variable (e.g. “Baltimore, MD”) and 
+* then summarize within cities to obtain the total number of homicides and the number of unsolved homicides (those for which the disposition is “Closed without arrest” or “Open/No arrest”).
+
+```{r}
+homicide1 = 
+  homicide_df |>
+  unite(city_state,c(city,state),sep = ', ') |>
+  mutate(resolved = as.numeric(disposition == "Closed by arrest"),
+         victim_age = as.numeric(victim_age))# |>
+  #summarise(n_unsolved = n(resolved == "0"))
+
+```
+
+* For the city of Baltimore, MD, use the prop.test function to estimate the proportion of homicides that are unsolved; save the output of prop.test as an R object, apply the broom::tidy to this object and pull the estimated proportion and confidence intervals from the resulting tidy dataframe.
+
+```{r}
+baltimore_df = 
+  homicide1 |> 
+  filter(city == "Baltimore") #|> 
+```
+
+
+## Problem 2
+
+```{r}
+
+```
+
