@@ -103,39 +103,6 @@ prop_test_results |>
   *Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
   
 ```{r}
-filename = list.files("./data2", pattern = ".csv")
-
-# Define a function to read and tidy each file
-import_and_tidy <- function(filename) {
-  data = read_csv(filename)
-  subject_id = str_extract(basename(filename), "\\d+") 
-  arm = ifelse(str_detect(basename(filename), "con"), "Control", "Experimental") 
-  
-  data = 
-    data |>
-    mutate(SubjectID = subject_id, Arm = arm)
-  
-  return(data)
-}
-
-combined_data = import_and_tidy(filename)
-
-combined_data = 
-  table = map(import_and_tidy(filename)) |>
-  unnest(table)
-combined_data
-
-combined_data1 = 
-  combined_data |>
-  pivot_longer(
-    week_1:week_8, 
-    names_to = "week",
-    values_to = "observations_over_time"
-  )
-combined_data1
-```
-
-```{r}
 fulldata = 
   tibble(
     filename = list.files("./data2", pattern = ".csv"),
@@ -145,11 +112,21 @@ fulldata =
   unnest() |>
   select(starts_with("week"))
 
+filename = list.files("./data2", pattern = ".csv")
 subject_id = str_extract(basename(filename), "\\d+") 
 arm = ifelse(str_detect(basename(filename), "con"), "Control", "Experimental")
 subjectinfo = tibble(SubjectID = subject_id,Arm = arm)
 combinedata = bind_cols(subjectinfo,fulldata)
 combinedata
+
+combined_data1 = 
+  combinedata |>
+  pivot_longer(
+    week_1:week_8, 
+    names_to = "week",
+    values_to = "observations_over_time"
+  )
+combined_data1
 ```
 
 * Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
@@ -170,7 +147,7 @@ spaghetti_plot =
        color = "Subject ID")
 
 spaghetti_plot
-ggsave(spaghetti_plot)
+ggsave("spaghetti_plot.jpg")
 ```
 
 ## Problem 3
@@ -215,19 +192,54 @@ sim_result_df =
   unnest(estimate_df)
 sim_result_df
 
-sim_result_df |> 
-  mutate(
-    sample_size = str_c("n = ", sample_size),
-    sample_size = fct_inorder(sample_size)
-  ) |> 
-  ggplot(aes(x = sample_size, y = mean)) + 
-  geom_boxplot()
+power_df =
+  sim_result_df |>
+  group_by(mu) |>
+  summarize(power = mean(p.value < 0.05)) |>
+  ggplot(aes(x = mu,y = power)) +
+  geom_path() +
+  labs(title = "Power of the Test vs. True Value of mu",
+       x = "True Value of mu",
+       y = "Power of the Test")
+power_df
 
+ggsave("Power of the Test vs. True Value of mu.jpg")
 ```
 
-  * Make a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis. Make a second plot (or overlay on the first) the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂ across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
+The power increases when the effect size of $\mu$ increases.
+
+  * Make a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis. 
+  * Make a second plot (or overlay on the first) the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂ across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
   
 ```{r}
+avg_estimates = 
+  sim_result_df |>
+  group_by(mu) |>
+  summarize(avg_mu_hat_all = mean(estimate), 
+            avg_mu_hat_rejected = mean(estimate[p.value < 0.05]))
+avg_estimates
 
+# Plotting the average estimates
+avg_estimate_plot = 
+  avg_estimates |>
+  ggplot(aes(x = mu)) +
+  geom_line(aes(y = avg_mu_hat_all), color = "blue") +
+  geom_line(aes(y = avg_mu_hat_rejected), color = "red") +
+  labs(title = "Average Estimates of muhat vs True Value of mu",
+       x = "True Value of mu",
+       y = "Average Estimate of muhat") +
+  scale_color_manual(values = c("blue", "red")) +
+  theme_minimal()
+avg_estimate_plot
+
+ggsave("The average estimates plot.jpg")
 ```
+
+```{r}
+sim_result_df |>
+  ggplot(aes(x = estimate))+ 
+  geom_histogram() +
+  facet_grid(p.value < 0.05 ~ mu)
+```
+
 
