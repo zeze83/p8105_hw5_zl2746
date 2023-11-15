@@ -8,6 +8,8 @@ output: github_document
 ```{r, include = FALSE, message = FALSE, warning = FALSE}
 library(tidyverse)
 library(rvest)
+library(ggplot2)
+library(broom)
 
 knitr::opts_chunk$set(
 	echo = TRUE,
@@ -60,9 +62,128 @@ baltimore_df =
 ```
 
 
+
 ## Problem 2
 
+* Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
+  * Start with a dataframe containing all file names; the list.files function will help
+  * Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
+  *Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+  
 ```{r}
+filename = list.files("./data2", pattern = ".csv")
+
+# Define a function to read and tidy each file
+import_and_tidy <- function(filename) {
+  data = read_csv(filename)
+  subject_id = str_extract(basename(filename), "\\d+") 
+  arm = ifelse(str_detect(basename(filename), "con"), "Control", "Experimental") 
+  
+  data = 
+    data |>
+    mutate(SubjectID = subject_id, Arm = arm)
+  
+  return(data)
+}
+
+combined_data = import_and_tidy(filename)
+
+combined_data = 
+  table = map(import_and_tidy(filename)) |>
+  unnest(table)
+combined_data
+
+combined_data1 = 
+  combined_data |>
+  pivot_longer(
+    week_1:week_8, 
+    names_to = "week",
+    values_to = "observations_over_time"
+  )
+combined_data1
+```
+
+```{r}
+fulldata = 
+  tibble(
+    filename = list.files("./data2", pattern = ".csv"),
+    path = str_c("./data2/",filename)
+  ) |>
+  mutate(data = map(path, ~read_csv(.x))) |>
+  unnest() |>
+  select(starts_with("week"))
+
+subject_id = str_extract(basename(filename), "\\d+") 
+arm = ifelse(str_detect(basename(filename), "con"), "Control", "Experimental")
+subjectinfo = tibble(SubjectID = subject_id,Arm = arm)
+combinedata = bind_cols(subjectinfo,fulldata)
+combinedata
+```
+
+* Make a spaghetti plot showing observations on each subject over time, and comment on differences between groups.
+
+```{r}
+spaghetti_plot =
+  ggplot(combined_data1, 
+         aes(x = week, 
+             y = observations_over_time, 
+             group = SubjectID, 
+             color = Arm)) +
+  geom_line() +
+  theme_minimal() +
+  facet_grid(. ~ Arm) +
+  labs(title = "Spaghetti Plot of Observations Over Time",
+       x = "Time",
+       y = "Measurement",
+       color = "Subject ID")
+
+spaghetti_plot
+ggsave(spaghetti_plot)
+```
+
+## Problem 3
+
+
+```{r}
+set.seed(12345)
+
+sim_t_test = function(n_obs, mu = 0, sigma = 5) {
+  
+  x_vec = rnorm(n = n_obs, mean = mu, sd = sigma)
+  t_result <- t.test(x_vec, alternative = "two.sided", conf.level = 0.95)
+  tidy(t_result)
+  
+}
+
+output = vector("list", length = 5000)
+
+for (i in 1:5000) {
+  
+  output[[i]] = sim_t_test(n_obs = 30)
+  
+}
+
+mu0_results = 
+  bind_rows(output)
+
+```
+
+```{r}
+sim_result_df =
+  expand_grid(
+    sample_size = c(30, 60, 120, 240),
+    iter = 1:5000
+  ) |> 
+  mutate(estimate_df = map(sample_size, sim_mean_sd)) |> 
+  unnest(estimate_df)
+
+sim_result_df |> 
+  mutate(
+    sample_size = str_c("n = ", sample_size),
+    sample_size = fct_inorder(sample_size)
+  ) |> 
+  ggplot(aes(x = sample_size, y = mean)) + 
+  geom_boxplot()
 
 ```
 
