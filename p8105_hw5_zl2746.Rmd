@@ -242,7 +242,7 @@ ggsave("The average estimates plot.jpg")
 
 The average estimates plot shows that the average estimate of μ is approximately equal to the true value of μ. However, the average estimate of μ̂ only in samples for which the null was rejected have some difference with the true value of μ.
 
-The following distribution of μ shows some reason for this difference.
+The following distribution of μ shows some reason for this difference. Since smaller effect sizes, there is a lower power since fewer tests will result in rejection.
 
 ```{r}
 # Distribution of mu
