@@ -100,7 +100,7 @@ prop_test_results |>
 * Create a tidy dataframe containing data from all participants, including the subject ID, arm, and observations over time:
   * Start with a dataframe containing all file names; the list.files function will help
   * Iterate over file names and read in data for each subject using purrr::map and saving the result as a new variable in the dataframe
-  *Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”, and do any other tidying that’s necessary
+  *Tidy the result; manipulate file names to include control arm and subject ID, make sure weekly observations are “tidy”
   
 ```{r}
 fulldata = 
@@ -147,8 +147,12 @@ spaghetti_plot =
        color = "Subject ID")
 
 spaghetti_plot
-ggsave("spaghetti_plot.jpg")
+ggsave("spaghetti_plot.jpg",width = 10, height = 5)
 ```
+
+The spaghetti plot displays two groups: Control (purple) has more stable and consistent measurements, and Experimental (yellow) has wider variance and a small increasing trends over time. 
+
+
 
 ## Problem 3
 
@@ -198,6 +202,7 @@ power_df =
   summarize(power = mean(p.value < 0.05)) |>
   ggplot(aes(x = mu,y = power)) +
   geom_path() +
+  geom_smooth() +
   labs(title = "Power of the Test vs. True Value of mu",
        x = "True Value of mu",
        y = "Power of the Test")
@@ -206,7 +211,7 @@ power_df
 ggsave("Power of the Test vs. True Value of mu.jpg")
 ```
 
-The power increases when the effect size of $\mu$ increases.
+The power increases when the effect size of $\mu$ increases. And the probability of rejection is close to 0.05 as the significant level we choose.
 
   * Make a plot showing the average estimate of μ̂ on the y axis and the true value of μ on the x axis. 
   * Make a second plot (or overlay on the first) the average estimate of μ̂ only in samples for which the null was rejected on the y axis and the true value of μ on the x axis. Is the sample average of μ̂ across tests for which the null is rejected approximately equal to the true value of μ? Why or why not?
@@ -235,7 +240,10 @@ avg_estimate_plot
 ggsave("The average estimates plot.jpg")
 ```
 
+
+
 ```{r}
+# 
 sim_result_df |>
   ggplot(aes(x = estimate))+ 
   geom_histogram() +
