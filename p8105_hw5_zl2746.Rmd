@@ -189,7 +189,7 @@ mu0_results =
 ```{r}
 sim_result_df =
   expand_grid(
-    mu = 1:6,
+    mu = 0:6,
     iter = 1:5000
   ) |> 
   mutate(estimate_df = map(mu, ~sim_t_test(.x))) |> 
@@ -205,7 +205,8 @@ power_df =
   geom_smooth() +
   labs(title = "Power of the Test vs. True Value of mu",
        x = "True Value of mu",
-       y = "Power of the Test")
+       y = "Power of the Test") +
+  theme_minimal()
 power_df
 
 ggsave("Power of the Test vs. True Value of mu.jpg")
@@ -224,7 +225,6 @@ avg_estimates =
             avg_mu_hat_rejected = mean(estimate[p.value < 0.05]))
 avg_estimates
 
-# Plotting the average estimates
 avg_estimate_plot = 
   avg_estimates |>
   ggplot(aes(x = mu)) +
@@ -240,10 +240,12 @@ avg_estimate_plot
 ggsave("The average estimates plot.jpg")
 ```
 
+The average estimates plot shows that the average estimate of μ is approximately equal to the true value of μ. However, the average estimate of μ̂ only in samples for which the null was rejected have some difference with the true value of μ.
 
+The following distribution of μ shows some reason for this difference.
 
 ```{r}
-# 
+# Distribution of mu
 sim_result_df |>
   ggplot(aes(x = estimate))+ 
   geom_histogram() +
